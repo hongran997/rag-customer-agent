@@ -1,0 +1,35 @@
+# 客服知识库 RAG 业务配置模板
+# 新业务只需复制此文件并修改参数即可快速接入
+
+business:
+  name: "default"              # 业务名称，用于 Milvus 标签隔离
+  description: "默认业务知识库"
+
+vector_store:
+  collection_name: "rag_knowledge_base"
+  dim: 1024                    # BGE-large-zh-v1.5 向量维度
+  similarity_metric: "IP"      # 相似度计算方式 (IP=内积, L2=欧氏距离)
+
+retrieval:
+  top_k: 10                    # 召回 TopK 数量
+  similarity_threshold: 0.35   # 相似度阈值，低于此值过滤
+  vector_weight: 0.7           # 向量检索权重
+  keyword_weight: 0.3          # 关键词检索权重
+
+chunker:
+  chunk_size: 512              # 分块字符数
+  chunk_overlap: 120           # 重叠窗口字符数
+
+llm:
+  temperature: 0.1             # 生成温度 (越低越确定)
+  max_tokens: 4096             # 最大生成 token 数
+
+session:
+  ttl: 86400                   # 会话过期时间 (秒)
+  max_context_tokens: 4096     # 上下文最大 token 数
+  max_history_turns: 10        # 最大历史对话轮数
+
+# 业务自定义 Prompt 模板 (可选)
+prompts:
+  intent_system_prompt: ""     # 空字符串表示使用默认模板
+  hallucination_system_prompt: ""  # 空字符串表示使用默认模板
