@@ -27,6 +27,11 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 CHUNK_SIZE = 512
 CHUNK_OVERLAP = 120
+ES_HOST = os.getenv("ES_HOST", "localhost")          # ES 服务地址
+ES_PORT = int(os.getenv("ES_PORT", "9200"))            # ES 服务端口
+ES_INDEX_NAME = os.getenv("ES_INDEX_NAME", "rag_knowledge_base")  # ES 索引名（和 Milvus collection 对应）
+ES_KEYWORD_TOP_K = int(os.getenv("ES_KEYWORD_TOP_K", "50"))  # ES 单次搜索最大返回数
+
 RETRIEVE_TOP_K = 10
 SIMILARITY_THRESHOLD = 0.35
 VECTOR_WEIGHT = 0.7

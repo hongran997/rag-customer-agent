@@ -5,6 +5,7 @@ from core.document_loader import get_loader, deduplicate_chunks, filter_short_fr
 from core.chunker import SemanticChunker
 from core.embedding import embedding_model
 from core.vector_store import milvus_store
+from core.es_store import es_store
 from utils.logger import logger
 
 
@@ -37,13 +38,23 @@ def process_single_document(
     texts = [c["text_chunk"] for c in chunks_with_meta]
     vectors = embedding_model.encode(texts)
 
-    milvus_store.insert(
+    mr = milvus_store.insert(
         texts=texts,
         vectors=vectors,
         source_docs=[c["source_doc"] for c in chunks_with_meta],
         business_types=[c["business_type"] for c in chunks_with_meta],
         chunk_indices=[c["chunk_index"] for c in chunks_with_meta],
     )
+
+    # 同时写入 ES，建立倒排索引用于关键词检索（双向写入：向量库 + 全文检索库）
+    if mr and mr.primary_keys:
+        es_store.insert(
+            ids=mr.primary_keys,   # 用 Milvus 的主键 ID，保证两个库文档一一对应
+            texts=texts,
+            source_docs=[c["source_doc"] for c in chunks_with_meta],
+            business_types=[c["business_type"] for c in chunks_with_meta],
+            chunk_indices=[c["chunk_index"] for c in chunks_with_meta],
+        )
 
     logger.info(
         f"文档处理完成: {file_path} → {len(chunks_with_meta)} 块向量入库"
