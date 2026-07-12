@@ -1,3 +1,3 @@
-from core.retrieve.hybrid_retriever import HybridRetriever, hybrid_retriever
+from core.retrieve.hybrid_retriever import TripleHybridRetriever, hybrid_retriever
 
-__all__ = ["HybridRetriever", "hybrid_retriever"]
+__all__ = ["TripleHybridRetriever", "hybrid_retriever"]

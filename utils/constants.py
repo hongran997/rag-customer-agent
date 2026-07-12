@@ -32,12 +32,20 @@ ES_PORT = int(os.getenv("ES_PORT", "9200"))            # ES 服务端口
 ES_INDEX_NAME = os.getenv("ES_INDEX_NAME", "rag_knowledge_base")  # ES 索引名（和 Milvus collection 对应）
 ES_KEYWORD_TOP_K = int(os.getenv("ES_KEYWORD_TOP_K", "50"))  # ES 单次搜索最大返回数
 
+MIN_TEXT_LENGTH = 10
+
+# Neo4j 图数据库配置
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "password")
+
+# 三路混合检索配置（向量 + 关键词 + 图）
 RETRIEVE_TOP_K = 10
 SIMILARITY_THRESHOLD = 0.35
-VECTOR_WEIGHT = 0.7
-KEYWORD_WEIGHT = 0.3
-
-MIN_TEXT_LENGTH = 10
+VECTOR_WEIGHT = 0.5
+KEYWORD_WEIGHT = 0.25
+GRAPH_WEIGHT = 0.25
+GRAPH_TRAVERSAL_DEPTH = 2
 
 COLLECTION_SCHEMA_FIELDS = [
     "id",

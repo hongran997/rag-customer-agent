@@ -34,6 +34,23 @@ INTENT_SYSTEM_PROMPT = """你是一个智能客服意图分析助手。请分析
 
 ALLOWED_INTENTS = {"business_consult", "chitchat", "follow_up", "unclear"}
 
+# 图检索关键词：用户问题中包含这些词时，优先用图检索
+GRAPH_KEYWORDS = [
+    "投诉", "购买", "采购", "负责", "管理", "处理", "联系",
+    "关系", "关联", "属于", "归属", "合作", "对接",
+    "哪些", "谁", "哪个", "什么关系", "什么联系",
+    "路径", "链路", "网络", "下属", "上级", "部门",
+    "客户", "供应商", "服务商",
+]
+
+# 语义检索关键词：用户问题中包含这些词时，优先用语义检索
+SEMANTIC_KEYWORDS = [
+    "什么是", "是什么意思", "如何", "怎么", "怎样",
+    "介绍", "说明", "解释", "描述", "概述",
+    "定义", "概念", "含义", "指什么",
+    "流程", "步骤", "方法",
+]
+
 
 class IntentParser:
     def parse(
@@ -61,15 +78,32 @@ class IntentParser:
                 f"需检索: {result['need_retrieve']} | "
                 f"改写: {result['query_rewrite']}"
             )
-            return result
         except Exception as e:
             logger.warning(f"意图解析失败, 使用默认值: {e}")
-            return {
+            result = {
                 "intent_type": "business_consult",
                 "need_retrieve": True,
                 "query_rewrite": query,
                 "reason": "parse_fallback",
             }
+
+        result["retrieval_strategy"] = self._detect_retrieval_strategy(query)
+        return result
+
+    def _detect_retrieval_strategy(self, query: str) -> str:
+        # 基于问题中的关键词判断最优检索策略
+        # graph: 适合实体关系类问题（查谁/找关系/投诉/购买等）
+        # semantic: 适合概念解释类问题（什么是/如何/怎么等）
+        # hybrid: 混合场景或无法判定时走三路融合
+        has_graph = any(kw in query for kw in GRAPH_KEYWORDS)
+        has_semantic = any(kw in query for kw in SEMANTIC_KEYWORDS)
+
+        if has_graph and not has_semantic:
+            return "graph"
+        elif has_semantic and not has_graph:
+            return "semantic"
+        else:
+            return "hybrid"
 
     def _format_history(self, history: List[Dict[str, str]]) -> str:
         lines = []

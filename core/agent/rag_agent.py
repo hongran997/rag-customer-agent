@@ -41,9 +41,12 @@ class RAGAgent:
             return result
 
         search_query = intent.get("query_rewrite") or query
+        # 从意图解析中获取检索策略，按问题类型动态路由（semantic/graph/hybrid）
+        retrieval_strategy = intent.get("retrieval_strategy", "hybrid")
         retrieved = self.retrieval_augmentor.retrieve_context(
             query=search_query,
             business_type=business_type,
+            retrieval_strategy=retrieval_strategy,
         )
 
         if not retrieved:
@@ -100,9 +103,12 @@ class RAGAgent:
             return
 
         search_query = intent.get("query_rewrite") or query
+        # 检索策略由意图解析器根据问题内容动态决定
+        retrieval_strategy = intent.get("retrieval_strategy", "hybrid")
         retrieved = self.retrieval_augmentor.retrieve_context(
             query=search_query,
             business_type=business_type,
+            retrieval_strategy=retrieval_strategy,
         )
 
         if not retrieved:

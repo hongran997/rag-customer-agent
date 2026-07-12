@@ -6,6 +6,7 @@ from core.chunker import SemanticChunker
 from core.embedding import embedding_model
 from core.vector_store import milvus_store
 from core.es_store import es_store
+from core.graph_store.neo4j_store import neo4j_store
 from utils.logger import logger
 
 
@@ -56,8 +57,23 @@ def process_single_document(
             chunk_indices=[c["chunk_index"] for c in chunks_with_meta],
         )
 
+    # 写入 Neo4j 图数据库（建立文档-知识块图谱）
+    if mr and mr.primary_keys:
+        source_doc = loader.get_metadata()["source_doc"]
+        neo4j_store.merge_document(source_doc, business_type)
+        for chunk_id, chunk in zip(mr.primary_keys, chunks_with_meta):
+            neo4j_store.merge_chunk(
+                chunk_id=chunk_id,
+                text_preview=chunk["text_chunk"],
+                source_doc=source_doc,
+                business_type=business_type,
+                chunk_index=chunk["chunk_index"],
+            )
+            neo4j_store.link_chunk_to_document(chunk_id, source_doc)
+
     logger.info(
-        f"文档处理完成: {file_path} → {len(chunks_with_meta)} 块向量入库"
+        f"文档处理完成: {file_path} → {len(chunks_with_meta)} 块向量入库, "
+        f"图数据库同步 {len(mr.primary_keys) if mr and mr.primary_keys else 0} 节点"
     )
     return chunks_with_meta
 
