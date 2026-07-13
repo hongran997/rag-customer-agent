@@ -2,6 +2,7 @@ from core.document_loader.base import DocumentLoader, TextLoader, get_loader
 from core.document_loader.cleaner import clean_text, filter_short_fragments, deduplicate_chunks
 from core.document_loader.pdf_loader import PDFLoader
 from core.document_loader.docx_loader import DocxLoader
+from core.document_loader.ocr_processor import ocr_image_bytes, should_skip_image
 
 __all__ = [
     "DocumentLoader",
@@ -12,4 +13,6 @@ __all__ = [
     "clean_text",
     "filter_short_fragments",
     "deduplicate_chunks",
+    "ocr_image_bytes",
+    "should_skip_image",
 ]
