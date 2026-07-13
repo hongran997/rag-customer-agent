@@ -3,6 +3,7 @@ import fitz
 from core.document_loader.base import DocumentLoader
 from core.document_loader.cleaner import clean_text
 from core.document_loader.ocr_processor import ocr_image_bytes, should_skip_image
+from core.document_loader.table_processor import extract_tables_from_page
 from utils.logger import logger
 
 OCR_DEDUP_THRESHOLD = 0.6
@@ -21,14 +22,25 @@ class PDFLoader(DocumentLoader):
     def load(self) -> str:
         text_parts = []
         total_ocr_chars = 0
+        total_table_chars = 0
         doc = fitz.open(self.file_path)
         logger.info(f"解析PDF文档: {self.file_path.name}, 共 {len(doc)} 页")
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
             page_text = page.get_text("text")
             page_text = clean_text(page_text)
-            ocr_texts = self._extract_images_text(doc, page, page_num, page_text)
+
+            table_text = extract_tables_from_page(page, page_text)
+            existing_for_ocr = page_text
+            if table_text:
+                existing_for_ocr += "\n\n" + table_text
+
+            ocr_texts = self._extract_images_text(doc, page, page_num, existing_for_ocr)
+
             combined = page_text
+            if table_text:
+                combined += "\n\n" + table_text
+                total_table_chars += len(table_text)
             if ocr_texts:
                 combined += "\n\n" + ocr_texts
                 total_ocr_chars += len(ocr_texts)
@@ -39,7 +51,8 @@ class PDFLoader(DocumentLoader):
         logger.info(
             f"PDF解析完成: {self.file_path.name}, "
             f"提取字符数: {len(full_text)} "
-            f"(其中OCR识别: {total_ocr_chars} 字符)"
+            f"(其中表格: {total_table_chars} 字符, "
+            f"OCR识别: {total_ocr_chars} 字符)"
         )
         return full_text
 
